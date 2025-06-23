@@ -9,3 +9,4 @@
 *.json
 *.zip
 *.Identifier
+/TCGA-KIRC/
