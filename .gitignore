@@ -1,0 +1,11 @@
+*.tsv
+*.pth
+*.npz
+*.pyc
+*.png
+*.txt
+*.ipynb
+*.nii.gz
+*.json
+*.zip
+*.Identifier
