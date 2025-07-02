@@ -110,56 +110,8 @@ class FC(nn.Module):
     def forward(self, x):
         return self.fc(x)
 
-
-class ClinicalNet(nn.Module):
-    """Clinical data extractor.
-
-    Handle continuous features and categorical feature embeddings.
-    """
-    def __init__(self, output_vector_size, 
-                #  embedding_dims=[(33, 17), (2, 1), (8, 4), (3, 2), (3, 2), (3, 2), (3, 2), (3, 2), (20, 10)]
-                 embedding_dims=[(2, 1), (5, 3), (2, 1), (2, 1), (3, 2)]):
-        super(ClinicalNet, self).__init__()
-        # Embedding layer
-        self.embedding_layers = nn.ModuleList([nn.Embedding(x, y)
-                                               for x, y in embedding_dims])
-
-        n_embeddings = sum([y for x, y in embedding_dims])
-        n_continuous = 1
-
-        # Linear Layers
-        self.linear = nn.Linear(n_embeddings + n_continuous, 256)
-        # self.linear = nn.Linear(n_embeddings, 256)
-
-        # Embedding dropout Layer
-        self.embedding_dropout = nn.Dropout(p=0.5)
-
-        # Continuous feature batch norm layer
-        # self.bn_layer = nn.BatchNorm1d(n_continuous)
-
-        # Output Layer
-        self.output_layer = FC(256, output_vector_size, 1)
-
-    def forward(self, x):
-        categorical_x, continuous_x = x
-        categorical_x = categorical_x.to(torch.int64)
-
-        x = [emb_layer(categorical_x[:, i])
-             for i, emb_layer in enumerate(self.embedding_layers)]
-        x = torch.cat(x, 1)
-        x = self.embedding_dropout(x)
-
-        if continuous_x.shape[-1] >1:
-            continuous_x = self.bn_layer(continuous_x)
-
-        x = torch.cat([x, continuous_x], 1)
-        x1 = self.linear(x)
-        
-        out = self.output_layer(x1)
-
-        return out
     
-class ClinicalNet2(nn.Module):
+class ClinicalNet(nn.Module):
     """Clinical data extractor.
 
     Handle continuous features and categorical feature embeddings.
@@ -168,7 +120,7 @@ class ClinicalNet2(nn.Module):
                 #  embedding_dims=[(33, 17), (2, 1), (8, 4), (3, 2), (3, 2), (3, 2), (3, 2), (3, 2), (20, 10)]
                 #  embedding_dims=[(2, 1), (5, 3), (2, 1), (2, 1), (3, 2)]):
                  embedding_dims=[(2, 1), (5, 3), (2, 1), (2, 1)]):
-        super(ClinicalNet2, self).__init__()
+        super(ClinicalNet, self).__init__()
         # Embedding layer
         self.embedding_layers = nn.ModuleList([nn.Embedding(x, y)
                                                for x, y in embedding_dims])
@@ -266,7 +218,7 @@ class GeneNet(nn.Module):
         super(GeneNet, self).__init__()
 
         # Linear Layers
-        output_vector_size = 128
+        output_vector_size = 64
         self.fc1 = nn.Linear(13, 64)
         self.fc2 = FC(64, output_vector_size, 3)
         self.embedding_dropout = nn.Dropout(p=0.5)
@@ -659,12 +611,12 @@ class BaseNet_multi(nn.Module):
         self.softmax = nn.Softmax(dim=1)
         self.relu = ReLU()
 
-        self.fc_final_1 = Linear(nFC+nFC_2, (nFC+nFC_2)//2)
-        self.fc_final_2 = Linear((nFC+nFC_2)//2, 32)
-        self.fc_final_3 = Linear(32, nOut)
+        self.lin = Linear(nFC+nFC_2, (nFC+nFC_2)//2)
+        self.lin2 = Linear((nFC+nFC_2)//2, 32)
+        self.lin3 = Linear(32, nOut)
 
     def forward(self, x):
-        x = x['ct']
+        # x = x['ct']
         x,y = x
         phase_feature1 = []
         phase_feature2 = []
@@ -695,9 +647,9 @@ class BaseNet_multi(nn.Module):
 
         fused_feature = torch.cat([x, x_2], dim=1)
         
-        x_fused = F.relu(self.fc_final_1(fused_feature))
-        x_fused = F.relu(self.fc_final_2(x_fused))
-        x_final = self.fc_final_3(x_fused)
+        x_fused = F.relu(self.lin(fused_feature))
+        x_fused = F.relu(self.lin2(x_fused))
+        x_final = self.lin3(x_fused)
 
         return x_final, fused_feature # , x_final
 

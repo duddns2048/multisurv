@@ -15,7 +15,7 @@ from torch_geometric.data import Data
 import torch.nn as nn
 
 from My_datasets import unified_dataset2
-from multisurv import MultiSurv, MultiSurv2
+from multisurv import MultiSurv
 from Utils_KIRC import interval_cut, cox_loss, time_cox_loss
 
 import nibabel as nib
@@ -67,7 +67,7 @@ def main(exp_name, label_path, train_npz_dir, test_npz_dir, output_dir, epochs, 
     print(f"Total: {len(train_data)+len(test_data)} cases | Train: {len(train_data)} cases | Test: {len(test_data)} cases ")
         
     ## model
-    model = MultiSurv2(modalities, finetune=True)
+    model = MultiSurv(modalities, finetune=True)
 
     # CT
     # model = BaseNet()
@@ -160,7 +160,7 @@ def main(exp_name, label_path, train_npz_dir, test_npz_dir, output_dir, epochs, 
             
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--exp_name', type=str, default='wsi_clinical_tmp', help='experiment name')
+    parser.add_argument('--exp_name', type=str, default='clinical_wsi_miRNA_ct_tmp', help='experiment name')
     parser.add_argument('--label_path', type=str, default='./TCGA-KIRC/labels_537.tsv', help='experiment name')
     parser.add_argument('--train_npz_dir', type=str, default='./TCGA-KIRC/KIRC_npz/train', help='training set dir')
     parser.add_argument('--test_npz_dir', type=str, default='./TCGA-KIRC/KIRC_npz/test', help='test set dir')
@@ -168,7 +168,7 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', type=str, default='./trained/KIRC', help='model save dir')
     # parser.add_argument('--best_ckpt', type=str, default='./trained/KIRC/best_ckpt', help='best ckpt dir')
     parser.add_argument('--seed', type=int, default=1024, help='Random seed.')
-    parser.add_argument('--batch_size', type=int, default=64, help='mini_batch size')
+    parser.add_argument('--batch_size', type=int, default=2, help='mini_batch size')
     parser.add_argument('--epochs', type=int, default=100, help='Number of epochs to train.')
     parser.add_argument('--lr', type=float, default=0.00001, help='Initial learning rate.')
     parser.add_argument('--weight_decay', type=float, default=1e-5, help='Weight decay (L2 loss on parameters).')
@@ -177,7 +177,7 @@ if __name__ == '__main__':
     
     args_dict = vars(args)
 
-    modalities = ['wsi', 'clinical'] # clinical, miRNA, wsi, 
+    modalities = ['clinical', 'wsi', 'miRNA', 'ct'] # clinical, miRNA, wsi, 
     args_dict['modalities'] = modalities
     
     main(
@@ -189,4 +189,3 @@ if __name__ == '__main__':
         epochs = args.epochs, 
         modalities = modalities,
         )
-    

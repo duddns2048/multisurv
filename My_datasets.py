@@ -728,10 +728,6 @@ class unified_dataset2(Dataset):
 
         return data
     
-    def _get_mRNA(self, data_dir, patient_id):
-        return
-    def _get_CNV(self, data_dir, patient_id):
-        return
     def _get_gene(self, data_dir, patient_id):
         patient_files = list(self.gene_df['submitter_id'])
         cols = ['ACSS3', 'ALG13', 'ASXL3', 'BAP1', 'CFP', 'FAM47A', 'HAUS7', 'JADE3', 'KDM6A', 'NBPF10', 'NCOR1P1', 'SCRN1', 'ZNF449']
