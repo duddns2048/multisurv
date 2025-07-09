@@ -38,7 +38,7 @@ def plot_graph(save_dir, train_losses, valid_losses, plot):
     plt.close()
     
     
-def main(exp_name, label_path, train_npz_dir, test_npz_dir, output_dir, epochs, modalities):
+def main(exp_name, label_path, train_npz_dir, test_npz_dir, output_dir, epochs, modalities, test_only):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
     os.makedirs(os.path.join(output_dir), exist_ok=True)
@@ -56,21 +56,12 @@ def main(exp_name, label_path, train_npz_dir, test_npz_dir, output_dir, epochs, 
     train_batch_data = DataLoader(train_data, batch_size=args.batch_size, shuffle=True, drop_last=True)
     test_data = unified_dataset2(test_npz_dir,label_path, modalities, device)
     test_batch_data  = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, drop_last=True)
-    
-    # ct
-    # train_data = CT_dataset(train_npz_dir, label_path, modalities, device)
-    # train_batch_data = DataLoader(train_data, batch_size=args.batch_size, shuffle=True)
-    # test_data = CT_dataset(test_npz_dir, label_path, modalities, device)
-    # test_batch_data = DataLoader(test_data, batch_size=args.batch_size, shuffle=False)
-    
+        
     print("="*100)
     print(f"Total: {len(train_data)+len(test_data)} cases | Train: {len(train_data)} cases | Test: {len(test_data)} cases ")
         
     ## model
-    model = MultiSurv(modalities, finetune=True)
-
-    # CT
-    # model = BaseNet()
+    model = MultiSurv(modalities, finetune=True, test_only= test_only)
     
     model.to(device)
     
@@ -83,6 +74,36 @@ def main(exp_name, label_path, train_npz_dir, test_npz_dir, output_dir, epochs, 
     val_loss_list = []
     val_risk_list = []
     risk_highest = 0.0
+
+    if test_only:
+        print(f"\n[TEST MODE] Loading best model from {output_dir}/best_model.pth ...")
+
+        ckpt = './ckpt/clinical_wsi_miRNA_ct_best_checkpoint.pth'
+        # ckpt = './ckpt/clinical_wsi_miRNA_ct_gene_best_checkpoint.pth'
+        # model.load_final_ckpt(model, ckpt)
+        ckeckpoint = torch.load(ckpt)
+        model.load_state_dict(ckeckpoint['model'])
+        model.eval()
+
+        y_list = []
+        risk_list = []
+        status_list = []
+
+        with torch.no_grad():
+            for test_batch in tqdm(test_batch_data, desc="Testing"):
+                data_dict, label, case_name = test_batch
+                status, y = label['event'], label['time']
+
+                risk = model(data_dict)
+
+                y_list.extend(y.cpu().tolist())
+                risk_list.extend(risk.cpu().tolist())
+                status_list.extend(status.cpu().tolist())
+
+        test_c_index = concordance_index(np.array(y_list), -np.array(risk_list), np.array(status_list))
+        print(f'\n>>> Final Test C-Index: {test_c_index:.6f}')
+        return
+
     for epoch in range(epochs):
         print(f'========== Epoch {epoch} ===========================================================')
         model.train()
@@ -160,7 +181,7 @@ def main(exp_name, label_path, train_npz_dir, test_npz_dir, output_dir, epochs, 
             
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--exp_name', type=str, default='clinical_wsi_miRNA_ct_tmp', help='experiment name')
+    parser.add_argument('--exp_name', type=str, default='clinical_wsi_miRNA_ct_gene_tmp3', help='experiment name')
     parser.add_argument('--label_path', type=str, default='./TCGA-KIRC/labels_537.tsv', help='experiment name')
     parser.add_argument('--train_npz_dir', type=str, default='./TCGA-KIRC/KIRC_npz/train', help='training set dir')
     parser.add_argument('--test_npz_dir', type=str, default='./TCGA-KIRC/KIRC_npz/test', help='test set dir')
@@ -188,4 +209,5 @@ if __name__ == '__main__':
         output_dir = args.output_dir,
         epochs = args.epochs, 
         modalities = modalities,
+        test_only = True
         )
