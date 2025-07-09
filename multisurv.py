@@ -22,7 +22,7 @@ class MultiSurv(torch.nn.Module):
             self.submodels['clinical'] = self.clinical_submodel
 
             if self.finetune:
-                ckpt = './ckpt/best_model_clinical_0.688199.pth'
+                ckpt = './TCGA-KIRC/ckpt/best_model_clinical_0.688199.pth'
                 self.load_ckpt(self.clinical_submodel, ckpt)
             
             if fusion_method == 'cat':
@@ -33,7 +33,7 @@ class MultiSurv(torch.nn.Module):
             self.wsi_submodel = wsi_model()
             
             if self.finetune:
-                ckpt = './ckpt/best_model_wsi_0.829_hj.pth'
+                ckpt = './TCGA-KIRC/ckpt/best_model_wsi_0.829_hj.pth'
                 self.load_ckpt(self.wsi_submodel, ckpt)
             
             self.submodels['wsi'] = self.wsi_submodel
@@ -46,7 +46,7 @@ class MultiSurv(torch.nn.Module):
             self.miRNA_submodel = miRNA()
 
             if self.finetune:
-                ckpt = './ckpt/best_model_miRNA_0.669312.pth'
+                ckpt = './TCGA-KIRC/ckpt/best_model_miRNA_0.669312.pth'
                 self.load_ckpt(self.miRNA_submodel, ckpt)
 
             self.submodels['miRNA'] = self.miRNA_submodel

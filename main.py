@@ -61,7 +61,7 @@ def main(exp_name, label_path, train_npz_dir, test_npz_dir, output_dir, epochs, 
     print(f"Total: {len(train_data)+len(test_data)} cases | Train: {len(train_data)} cases | Test: {len(test_data)} cases ")
         
     ## model
-    model = MultiSurv(modalities, finetune=True, test_only= test_only)
+    model = MultiSurv(modalities, finetune=True)
     
     model.to(device)
     
@@ -199,7 +199,7 @@ if __name__ == '__main__':
     
     args_dict = vars(args)
 
-    modalities = ['clinical', 'wsi', 'miRNA', 'ct'] # clinical, miRNA, wsi, 
+    modalities = ['clinical', 'wsi', 'miRNA', 'ct', 'gene'] # clinical, miRNA, wsi, 
     args_dict['modalities'] = modalities
     
     main(
