@@ -78,9 +78,10 @@ def main(exp_name, label_path, train_npz_dir, test_npz_dir, output_dir, epochs, 
     if test_only:
         print(f"\n[TEST MODE] Loading best model from {output_dir}/best_model.pth ...")
 
-        ckpt = './ckpt/clinical_wsi_miRNA_ct_best_checkpoint.pth'
-        # ckpt = './ckpt/clinical_wsi_miRNA_ct_gene_best_checkpoint.pth'
-        # model.load_final_ckpt(model, ckpt)
+        if 'gene' in modalities:
+            ckpt = './TCGA-KIRC/ckpt/clinical_wsi_miRNA_ct_gene_best_checkpoint.pth'
+        else:
+            ckpt = './TCGA-KIRC/ckpt/clinical_wsi_miRNA_ct_best_checkpoint.pth'
         ckeckpoint = torch.load(ckpt)
         model.load_state_dict(ckeckpoint['model'])
         model.eval()
