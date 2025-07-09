@@ -8,7 +8,6 @@ import torch
 from lifelines.utils import concordance_index
 from torch.utils.data import DataLoader as utils_DataLoader
 from torch_geometric.loader import DataLoader
-from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from torch_geometric.data import Data
@@ -17,9 +16,6 @@ import torch.nn as nn
 from My_datasets import unified_dataset2
 from multisurv import MultiSurv
 from Utils_KIRC import interval_cut, cox_loss, time_cox_loss
-
-import nibabel as nib
-
 import matplotlib.pyplot as plt
 import sys
 
@@ -182,7 +178,7 @@ def main(exp_name, label_path, train_npz_dir, test_npz_dir, output_dir, epochs, 
             
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--exp_name', type=str, default='clinical_wsi_miRNA_ct_gene_tmp3', help='experiment name')
+    parser.add_argument('--exp_name', type=str, default='tmp', help='experiment name')
     parser.add_argument('--label_path', type=str, default='./TCGA-KIRC/labels_537.tsv', help='experiment name')
     parser.add_argument('--train_npz_dir', type=str, default='./TCGA-KIRC/KIRC_npz/train', help='training set dir')
     parser.add_argument('--test_npz_dir', type=str, default='./TCGA-KIRC/KIRC_npz/test', help='test set dir')
