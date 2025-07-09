@@ -8,14 +8,13 @@ from sub_models import FC, CnvNet, WsiNet, Fusion, wsi_model, BaseNet, ClinicalN
 
     
 class MultiSurv(torch.nn.Module):
-    def __init__(self, modalities, fusion_method='cat', device='cuda', finetune=False, test=False):
+    def __init__(self, modalities, fusion_method='cat', device='cuda', finetune=False):
         super(MultiSurv, self).__init__()
         
         self.modalities = modalities
         self.submodels = {}
         self.num_features = 0
         self.finetune = finetune
-        self.test = test
         
         # Clinical -----------------------------------------------------------#
         if 'clinical' in self.modalities:
@@ -24,7 +23,7 @@ class MultiSurv(torch.nn.Module):
 
             if self.finetune:
                 ckpt = './ckpt/best_model_clinical_0.688199.pth'
-                self.load_ckpt(self, self.clinical_submodel, ckpt, test=False)
+                self.load_ckpt(self.clinical_submodel, ckpt)
             
             if fusion_method == 'cat':
                 self.num_features += 256
@@ -35,7 +34,7 @@ class MultiSurv(torch.nn.Module):
             
             if self.finetune:
                 ckpt = './ckpt/best_model_wsi_0.829_hj.pth'
-                self.load_ckpt(self, self.wsi_submodel, ckpt, test=False)
+                self.load_ckpt(self.wsi_submodel, ckpt)
             
             self.submodels['wsi'] = self.wsi_submodel
             
@@ -45,11 +44,10 @@ class MultiSurv(torch.nn.Module):
         # miRNA --------------------------------------------------------------#
         if 'miRNA' in self.modalities:
             self.miRNA_submodel = miRNA()
-            # self.miRNA_submodel = FC(1881, self.num_features, 2)
 
             if self.finetune:
                 ckpt = './ckpt/best_model_miRNA_0.669312.pth'
-                self.load_ckpt(self, self.miRNA_submodel, ckpt, test=False)
+                self.load_ckpt(self.miRNA_submodel, ckpt)
 
             self.submodels['miRNA'] = self.miRNA_submodel
 
@@ -59,6 +57,11 @@ class MultiSurv(torch.nn.Module):
         # CT -----------------------------------------------------------------#
         if 'ct' in self.modalities:
             self.CT_submodel = BaseNet_multi()
+
+            # if self.finetune:
+            #     ckpt = './ckpt/best_model_miRNA_0.669312.pth'
+            #     self.load_ckpt(self.miRNA_submodel, ckpt)
+
             self.submodels['ct'] = self.CT_submodel
 
             if fusion_method == 'cat':
@@ -67,6 +70,11 @@ class MultiSurv(torch.nn.Module):
         # gene -----------------------------------------------------------------#
         if 'gene' in self.modalities:
             self.gene_submodel = GeneNet()
+
+            # if self.finetune:
+            #     ckpt = './ckpt/best_model_miRNA_0.669312.pth'
+            #     self.load_ckpt(self.miRNA_submodel, ckpt)
+
             self.submodels['gene'] = self.gene_submodel
 
             if fusion_method == 'cat':
@@ -91,15 +99,15 @@ class MultiSurv(torch.nn.Module):
                                 out_features=1),
                 # torch.nn.Sigmoid()
             )
-    def load_ckpt(self, model, ckpt, test= False):
+    def load_ckpt(self, model, ckpt):
         ckeckpoint = torch.load(ckpt)
         filtered_state_dict = {key: value for key, value in ckeckpoint.items() if not (key.startswith('lin') or key.startswith('lin2'))}
         model.load_state_dict(filtered_state_dict, strict=False)
-        if not test:
-            for name, param in model.named_parameters():
-                if not name.startswith('lin'):  
-                    param.requires_grad = False
+        for name, param in model.named_parameters():
+            if not name.startswith('lin'):  
+                param.requires_grad = False
         return model
+        
 
 
     def forward(self, x):
